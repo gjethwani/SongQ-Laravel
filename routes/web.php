@@ -18,5 +18,7 @@ Route::get('/', function () {
 Route::get('/host', 'SpotifyController@userAuth');
 Route::get('/spotify-redirect', 'SpotifyController@getCode');
 Route::get('/playlists', 'PlaylistController@showAll');
+Route::get('/playlists/{roomCode}', 'PlaylistController@showPlaylist');
 Route::get('/create-playlist', 'PlaylistController@create');
 Route::post('/create-playlist', 'PlaylistController@addPlaylist');
+Route::get('/guest', 'RequestController@search');
