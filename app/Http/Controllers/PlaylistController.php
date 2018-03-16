@@ -36,27 +36,25 @@ class PlaylistController extends Controller
         $name = $request->input('playlistName');
         $id = $request->input('playlistId');
 
+        //get user id
         $client = new Client();
         $accessToken = Config::get('accessToken');
         $bearerToken = 'Bearer ' . $accessToken;
+        $response = $client->request('GET','https://api.spotify.com/v1/me', ['headers' => ['Authorization' => $bearerToken]]);
+        $jsonResponse = json_decode($response->getBody()->getContents());
+        $userId = $jsonResponse->id;
 
         if ($name != NULL) {
-
-          //get user id
-          $response = $client->request('GET','https://api.spotify.com/v1/me', ['headers' => ['Authorization' => $bearerToken]]);
-          $jsonResponse = json_decode($response->getBody()->getContents());
-          $userId = $jsonResponse->id;
-
-          $respone = $client->request('POST','https://api.spotify.com/v1/users/' . $userId . '/playlists', [
+          $playlistResponse = $client->request('POST','https://api.spotify.com/v1/users/' . $userId . '/playlists', [
             'headers' => ['Authorization' => $bearerToken, 'Content-Type' => 'application/json'],
             'json' => ['name' => $name],
           ]);
 
-          $jsonResponse = json_decode($response->getBody()->getContents());
+          $jsonPlaylistResponse = json_decode($playlistResponse->getBody()->getContents());
 
 
         } else if ($id != NULL) {
-
+          $playlistResponse = $client 
         }
         $playlist = new Playlist;
         $playlist->playlistId = $jsonResponse->id;
