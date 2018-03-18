@@ -47,7 +47,6 @@ class SpotifyController extends Controller
            'username' => $jsonResponse->display_name]
         );
       } catch(\Illuminate\Database\QueryException $e) {
-
       }
       return redirect('/playlists');
     }
