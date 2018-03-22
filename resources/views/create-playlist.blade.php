@@ -2,32 +2,51 @@
 @section('title','Create Playlist')
 @section('content')
   <h1>Create a Playlist</h1>
-  <input type='radio' name='formSelect' onclick='return toggleForms("newPlaylist","existingPlaylist");' checked> Create a Playlist <br>
-  <input type='radio' name='formSelect' onclick='return toggleForms("existingPlaylist","newPlaylist");'> Choose an Existing Playlist <br>
-  <form action='/create-playlist' method='post' id='newPlaylist'>
-    {{csrf_field()}}
-    <div class='form-group'>
-      <input
-        type='text'
-        placeholder='Playlist Name'
-        name='playlistName'
-        class='form-control'>
-    </div>
-    <button type='submit' class='btn btn-primary'>Create</button>
-  </form>
 
-  <form action='/create-playlist' method='post' id='existingPlaylist' style='display: none'>
-    {{csrf_field()}}
-    <div class='form-group'>
-      <select
-        name='playlistId'
-        class='form-control'>
-        @foreach ($playlistData as $playlist)
-          <option value={{$playlist[0]}}>{{$playlist[1]}}</option>
+  @if ($errors->isNotEmpty())
+      <div class="alert alert-danger" role="alert">
+        @foreach($errors->all() as $message)
+          {{$message}}
         @endforeach
-      </select>
+      </div>
+  @endif
+
+  <form action='/create-playlist' method='post'>
+    {{csrf_field()}}
+    <input type='radio' value='create' name='formSelect' onclick='return toggleForms("newPlaylist","existingPlaylist");' checked> Create a Playlist <br>
+    <input type='radio' value='existing' name='formSelect' onclick='return toggleForms("existingPlaylist","newPlaylist");'> Choose an Existing Playlist <br>
+    <div id='newPlaylist'>
+      <div class='form-group'>
+        @if (old('playlist', null) != null)
+          <input
+            type='text'
+            placeholder='Playlist Name'
+            name='playlistName'
+            class='form-control'
+            value='{{old("playlist")}}'>
+        @else
+          <input
+            type='text'
+            placeholder='Playlist Name'
+            name='playlistName'
+            class='form-control'>
+        @endif
+      </div>
+      <button type='submit' class='btn btn-primary'>Create</button>
     </div>
-    <button type='submit' class='btn btn-primary'>Create</button>
+
+    <div id='existingPlaylist' style='display: none'>
+      <div class='form-group'>
+        <select
+          name='playlistId'
+          class='form-control'>
+          @foreach ($playlistData as $playlist)
+            <option value={{$playlist[0]}}>{{$playlist[1]}}</option>
+          @endforeach
+        </select>
+      </div>
+      <button type='submit' class='btn btn-primary'>Create</button>
+    </div>
   </form>
 @endsection
 <script>

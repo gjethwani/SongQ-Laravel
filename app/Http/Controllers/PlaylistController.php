@@ -7,6 +7,7 @@ use App\Playlist;
 use App\Request as SongRequest;
 use Illuminate\Support\Facades\Config;
 use GuzzleHttp\Client;
+use Validator;
 
 class PlaylistController extends Controller
 {
@@ -49,7 +50,7 @@ class PlaylistController extends Controller
     public function addPlaylist(Request $request) {
         $name = $request->input('playlistName');
         $id = $request->input('playlistId');
-
+        $formSelect = $request->input('formSelect');
         //get user id
         $client = new Client();
         $accessToken = Config::get('accessToken');
@@ -58,38 +59,59 @@ class PlaylistController extends Controller
         $jsonResponse = json_decode($response->getBody()->getContents());
         $userId = $jsonResponse->id;
         $playlistId = '';
-        if ($name != NULL) {
-          $playlistResponse = $client->request('POST','https://api.spotify.com/v1/users/' . $userId . '/playlists', [
-            'headers' => ['Authorization' => $bearerToken, 'Content-Type' => 'application/json'],
-            'json' => ['name' => $name],
+        $passes = false;
+        if ($name == 'create') {
+          dd("hello1");
+          $validation = Validator::make([
+            'playlistName' => $request->input('playlistName')
+          ], [
+            'playlistName' => 'required'
           ]);
-
-          $jsonPlaylistResponse = json_decode($playlistResponse->getBody()->getContents());
-          $playlistId = $jsonPlaylistResponse->id;
-
-        } else if ($id != NULL) {
+          if ($validation->passes()) {
+            dd("hello2");
+            $playlistResponse = $client->request('POST','https://api.spotify.com/v1/users/' . $userId . '/playlists', [
+              'headers' => ['Authorization' => $bearerToken, 'Content-Type' => 'application/json'],
+              'json' => ['name' => $name],
+            ]);
+            $jsonPlaylistResponse = json_decode($playlistResponse->getBody()->getContents());
+            $playlistId = $jsonPlaylistResponse->id;
+            $passes = true;
+          } else {
+            dd("hello5");
+            return redirect('/create-playlist');
+              //->withInput()
+              //->withErrors($validation);
+          }
+        } else if ($name == 'existing') {
+          dd("hello3");
+          $passes = true;
           $playlistResponse = $client->request('GET', 'https://api.spotify.com/v1/users/' . $userId . '/playlists/' . $id, ['headers' => ['Authorization' => $bearerToken]]);
           $jsonPlaylistResponse = json_decode($playlistResponse->getBody()->getContents());
           $name = $jsonPlaylistResponse->name;
           $playlistId = $id;
         }
-        $roomCodeCharacters = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9"];
-        $roomCode = '';
-        for ($i = 0; $i < 4; $i++) {
-          $index = rand(0,35);
-          $roomCode = $roomCode . $roomCodeCharacters[$index];
+        if ($passes) {
+          dd("hello4");
+          $roomCodeCharacters = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9"];
+          $roomCode = '';
+          for ($i = 0; $i < 4; $i++) {
+            $index = rand(0,35);
+            $roomCode = $roomCode . $roomCodeCharacters[$index];
+          }
+          $playlist = new Playlist;
+          $playlist->roomCode = $roomCode;
+          $playlist->playlistId = $playlistId;
+          $playlist->owner = $userId;
+          $playlist->playlistName = $name;
+          $playlist->save();
+          return redirect('/playlists');
         }
-        $playlist = new Playlist;
-        $playlist->roomCode = $roomCode;
-        $playlist->playlistId = $playlistId;
-        $playlist->owner = $userId;
-        $playlist->playlistName = $name;
-        $playlist->save();
-        return redirect('/playlists');
     }
 
     public function showPlaylist($roomCode) {
-        $requests = Playlist::find($roomCode)->Request;
+        $requests = SongRequest::where('serviced','0')
+          ->where('roomCode',$roomCode)
+          ->get();
         return view('requests', [
           'requests' => $requests
         ]);
