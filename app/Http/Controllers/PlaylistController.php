@@ -12,8 +12,14 @@ use Validator;
 class PlaylistController extends Controller
 {
     public function showAll() {
-      $playlists = Playlist::all();
-      //dd($playlists);
+      //get user id
+      $client = new Client();
+      $accessToken = Config::get('accessToken');
+      $bearerToken = 'Bearer ' . $accessToken;
+      $response = $client->request('GET','https://api.spotify.com/v1/me', ['headers' => ['Authorization' => $bearerToken]]);
+      $jsonResponse = json_decode($response->getBody()->getContents());
+      $userId = $jsonResponse->id;
+      $playlists = Playlist::where('owner',$userId)->get();
       return view('playlists', [
         'playlists' => $playlists
        ]);
@@ -60,15 +66,13 @@ class PlaylistController extends Controller
         $userId = $jsonResponse->id;
         $playlistId = '';
         $passes = false;
-        if ($name == 'create') {
-          dd("hello1");
+        if ($formSelect == 'create') {
           $validation = Validator::make([
             'playlistName' => $request->input('playlistName')
           ], [
-            'playlistName' => 'required'
+            'playlistName' => 'required|min:3'
           ]);
           if ($validation->passes()) {
-            dd("hello2");
             $playlistResponse = $client->request('POST','https://api.spotify.com/v1/users/' . $userId . '/playlists', [
               'headers' => ['Authorization' => $bearerToken, 'Content-Type' => 'application/json'],
               'json' => ['name' => $name],
@@ -77,13 +81,11 @@ class PlaylistController extends Controller
             $playlistId = $jsonPlaylistResponse->id;
             $passes = true;
           } else {
-            dd("hello5");
-            return redirect('/create-playlist');
-              //->withInput()
-              //->withErrors($validation);
+            return redirect()->action('PlaylistController@create')
+              ->withInput()
+              ->withErrors($validation);
           }
-        } else if ($name == 'existing') {
-          dd("hello3");
+        } else if ($formSelect == 'existing') {
           $passes = true;
           $playlistResponse = $client->request('GET', 'https://api.spotify.com/v1/users/' . $userId . '/playlists/' . $id, ['headers' => ['Authorization' => $bearerToken]]);
           $jsonPlaylistResponse = json_decode($playlistResponse->getBody()->getContents());
@@ -91,7 +93,6 @@ class PlaylistController extends Controller
           $playlistId = $id;
         }
         if ($passes) {
-          dd("hello4");
           $roomCodeCharacters = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9"];
           $roomCode = '';
           for ($i = 0; $i < 4; $i++) {

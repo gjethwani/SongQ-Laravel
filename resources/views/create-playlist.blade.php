@@ -17,13 +17,13 @@
     <input type='radio' value='existing' name='formSelect' onclick='return toggleForms("existingPlaylist","newPlaylist");'> Choose an Existing Playlist <br>
     <div id='newPlaylist'>
       <div class='form-group'>
-        @if (old('playlist', null) != null)
+        @if (old('playlistName', null) != null)
           <input
             type='text'
             placeholder='Playlist Name'
             name='playlistName'
             class='form-control'
-            value='{{old("playlist")}}'>
+            value='{{old("playlistName")}}'>
         @else
           <input
             type='text'
