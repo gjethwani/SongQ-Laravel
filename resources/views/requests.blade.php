@@ -20,6 +20,7 @@
     </tr>
     @endforeach
   </table>
+  <iframe src='https://open.spotify.com/embed?uri=spotify:user:{{$userId}}:playlist:{{$playlistId}}' width="300" height="380" frameborder="0" allowtransparency="true"></iframe>
 @endsection
 <script>
   var url = window.location.href;
