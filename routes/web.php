@@ -16,14 +16,17 @@ Route::get('/', function () {
 });
 
 Route::get('/host', 'SpotifyController@userAuth');
-Route::get('/spotify-redirect', 'SpotifyController@getCode');
-Route::get('/playlists', 'PlaylistController@showAll');
-Route::get('/playlists/{roomCode}', 'PlaylistController@showPlaylist');
-Route::get('/create-playlist', 'PlaylistController@create');
-Route::post('/create-playlist', 'PlaylistController@addPlaylist');
 Route::get('/guest', 'RequestController@findPlaylist');
 Route::post('/guest', 'RequestController@authenticatePlaylist');
 Route::get('/search', 'RequestController@returnResults');
 Route::get('/add-request', 'RequestController@addRequest');
-Route::get('/accept', 'RequestController@accept');
-Route::get('/decline', 'RequestController@decline');
+Route::get('/spotify-redirect', 'SpotifyController@getCode');
+
+Route::middleware(['authentication'])->group(function() {
+  Route::get('/playlists', 'PlaylistController@showAll');
+  Route::get('/playlists/{roomCode}', 'PlaylistController@showPlaylist');
+  Route::get('/create-playlist', 'PlaylistController@create');
+  Route::post('/create-playlist', 'PlaylistController@addPlaylist');
+  Route::get('/accept', 'RequestController@accept');
+  Route::get('/decline', 'RequestController@decline');
+});

@@ -4,21 +4,24 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Playlist;
+use App\User;
 use App\Request as SongRequest;
 use Illuminate\Support\Facades\Config;
 use GuzzleHttp\Client;
 use Validator;
+use Illuminate\Support\Facades\Auth;
 
 class PlaylistController extends Controller
 {
     public function showAll() {
       //get user id
-      $client = new Client();
+    /*  $client = new Client();
       $accessToken = Config::get('accessToken');
       $bearerToken = 'Bearer ' . $accessToken;
       $response = $client->request('GET','https://api.spotify.com/v1/me', ['headers' => ['Authorization' => $bearerToken]]);
       $jsonResponse = json_decode($response->getBody()->getContents());
-      $userId = $jsonResponse->id;
+      $userId = $jsonResponse->id;*/
+      $userId = Auth::id();
       $playlists = Playlist::where('owner',$userId)->get();
       return view('playlists', [
         'playlists' => $playlists
@@ -28,18 +31,29 @@ class PlaylistController extends Controller
     public function create() {
 
       //get user id
-      $client = new Client();
+      /*$client = new Client();
       $accessToken = Config::get('accessToken');
       $bearerToken = 'Bearer ' . $accessToken;
       $response = $client->request('GET','https://api.spotify.com/v1/me', ['headers' => ['Authorization' => $bearerToken]]);
       $jsonResponse = json_decode($response->getBody()->getContents());
-      $userId = $jsonResponse->id;
-
+      $userId = $jsonResponse->id;*/
+      $userId = Auth::id();
       $client = new Client();
-      $accessToken = Config::get('accessToken');
+      $accessToken = User::find($userId)->accessToken;
       $bearerToken = 'Bearer ' . $accessToken;
-      $response = $client->request('GET','https://api.spotify.com/v1/me/playlists?limit=50', ['headers' => ['Authorization' => $bearerToken]]);
+      $response = '';
+      try {
+          $response = $client->request('GET','https://api.spotify.com/v1/me/playlists?limit=50', ['headers' => ['Authorization' => $bearerToken]]);
+      } catch(\GuzzleHttp\Exception\RequestException $e) {
+          if ($e->getResponse()->getStatusCode() == 401) {
+            Auth::logout();
+            return redirect('/');
+          } else {
+            dd($e);
+          }
+      }
       $jsonResponse = json_decode($response->getBody()->getContents());
+
       $playlistArray = $jsonResponse->items;
       $playlistData = [];
       for ($i = 0; $i < sizeof($playlistArray); $i++) {
@@ -59,11 +73,13 @@ class PlaylistController extends Controller
         $formSelect = $request->input('formSelect');
         //get user id
         $client = new Client();
-        $accessToken = Config::get('accessToken');
+        /*$accessToken = Config::get('accessToken');
         $bearerToken = 'Bearer ' . $accessToken;
         $response = $client->request('GET','https://api.spotify.com/v1/me', ['headers' => ['Authorization' => $bearerToken]]);
         $jsonResponse = json_decode($response->getBody()->getContents());
-        $userId = $jsonResponse->id;
+        $userId = $jsonResponse->id;*/
+        $userId = Auth::id();
+        $bearerToken = 'Bearer ' . User::find($userId)->accessToken;
         $playlistId = '';
         $passes = false;
         if ($formSelect == 'create') {
@@ -73,10 +89,20 @@ class PlaylistController extends Controller
             'playlistName' => 'required|min:3'
           ]);
           if ($validation->passes()) {
-            $playlistResponse = $client->request('POST','https://api.spotify.com/v1/users/' . $userId . '/playlists', [
-              'headers' => ['Authorization' => $bearerToken, 'Content-Type' => 'application/json'],
-              'json' => ['name' => $name],
-            ]);
+            $playlistResponse = '';
+            try {
+              $playlistResponse = $client->request('POST','https://api.spotify.com/v1/users/' . $userId . '/playlists', [
+                'headers' => ['Authorization' => $bearerToken, 'Content-Type' => 'application/json'],
+                'json' => ['name' => $name],
+              ]);
+            } catch(\GuzzleHttp\Exception\RequestException $e) {
+                if ($e->getResponse()->getStatusCode() == 401) {
+                  Auth::logout();
+                  return redirect('/');
+                } else {
+                  dd($e);
+                }
+            }
             $jsonPlaylistResponse = json_decode($playlistResponse->getBody()->getContents());
             $playlistId = $jsonPlaylistResponse->id;
             $passes = true;
@@ -87,7 +113,17 @@ class PlaylistController extends Controller
           }
         } else if ($formSelect == 'existing') {
           $passes = true;
-          $playlistResponse = $client->request('GET', 'https://api.spotify.com/v1/users/' . $userId . '/playlists/' . $id, ['headers' => ['Authorization' => $bearerToken]]);
+          $playlistResponse = '';
+          try {
+              $playlistResponse = $client->request('GET', 'https://api.spotify.com/v1/users/' . $userId . '/playlists/' . $id, ['headers' => ['Authorization' => $bearerToken]]);
+          } catch(\GuzzleHttp\Exception\RequestException $e) {
+              if ($e->getResponse()->getStatusCode() == 401) {
+                Auth::logout();
+                return redirect('/');
+              } else {
+                dd($e);
+              }
+          }
           $jsonPlaylistResponse = json_decode($playlistResponse->getBody()->getContents());
           $name = $jsonPlaylistResponse->name;
           $playlistId = $id;
@@ -113,8 +149,12 @@ class PlaylistController extends Controller
         $requests = SongRequest::where('serviced','0')
           ->where('roomCode',$roomCode)
           ->get();
+        $userId = Auth::id();
+        $playlistId = Playlist::find($roomCode)->playlistId;
         return view('requests', [
-          'requests' => $requests
+          'requests' => $requests,
+          'userId' => $userId,
+          'playlistId' => $playlistId
         ]);
     }
 }
