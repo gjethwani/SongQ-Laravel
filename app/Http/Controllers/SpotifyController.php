@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class SpotifyController extends Controller
 {
-    private $URI = 'http://localhost:8000';
+    private $URI = env('REDIRECT_URI');
     //private $URI = 'http://www.songq.io';
     public function userAuth(Request $request) {
       $clientId = Config::get('constants.clientId');
