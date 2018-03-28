@@ -12,15 +12,16 @@ use Illuminate\Support\Facades\Auth;
 
 class SpotifyController extends Controller
 {
-    private $URI = env('REDIRECT_URI');
     //private $URI = 'http://www.songq.io';
     public function userAuth(Request $request) {
+      $URI = env('REDIRECT_URI');
       $clientId = Config::get('constants.clientId');
-      $redirectURI = $this->URI . '/spotify-redirect';
+      $redirectURI = $URI . '/spotify-redirect';
       return redirect('https://accounts.spotify.com/authorize?client_id=' . $clientId . '&response_type=code&redirect_uri=' . $redirectURI . '&scope=playlist-modify-public%20playlist-modify-private%20streaming%20user-read-email%20user-read-private%20user-read-birthdate&show_dialog=true' );
     }
 
     public function getCode(Request $request) {
+      $URI = env('REDIRECT_URI');
       $code = $request->input('code');
       /*$client = new Client();
       $response = $client->request('POST', 'https://accounts.spotify.com/api/token', [
@@ -37,7 +38,7 @@ class SpotifyController extends Controller
       $formParams = [
         'grant_type' => 'authorization_code',
         'code' => $code,
-        'redirect_uri' => $this->URI . '/spotify-redirect',
+        'redirect_uri' => $URI . '/spotify-redirect',
         'client_id' => '57a94d67afaa4a55802fdb9c6ca3d28f',
         'client_secret' => '47c18e0c81f242acbf372d6ddfc263df',
       ];
