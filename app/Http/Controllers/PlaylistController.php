@@ -157,4 +157,53 @@ class PlaylistController extends Controller
           'playlistId' => $playlistId
         ]);
     }
+
+    public function deletePlaylist($roomCode) {
+        $toDelete = Playlist::find($roomCode);
+        $toDelete->delete();
+    }
+
+    public function edit($roomCode) {
+        $playlistName = Playlist::find($roomCode)->playlistName;
+        return view('edit-playlist', [
+            'roomCode' => $roomCode,
+            'playlistName' => $playlistName
+        ]);
+    }
+
+    public function executeEdit(Request $request, $roomCode) {
+      $newName = $request->input('playlistName');
+      $validation = Validator::make([
+        'playlistName' => $newName
+      ], [
+        'playlistName' => 'required|min:3'
+      ]);
+      if ($validation->passes()) {
+        $client = new Client();
+        $userId = Auth::id();
+        $bearerToken = 'Bearer ' . User::find($userId)->accessToken;
+        $playlistId = Playlist::find($roomCode)->playlistId;
+        try {
+          $client->request('PUT','https://api.spotify.com/v1/users/' . $userId . '/playlists/' . $playlistId, [
+            'headers' => ['Authorization' => $bearerToken, 'Content-Type' => 'application/json'],
+            'json' => ['name' => $newName],
+          ]);
+        } catch(\GuzzleHttp\Exception\RequestException $e) {
+            if ($e->getResponse()->getStatusCode() == 401) {
+              Auth::logout();
+              return redirect('/');
+            } else {
+              dd($e);
+            }
+        }
+        $toEdit = Playlist::find($roomCode);
+        $toEdit->playlistName = $newName;
+        $toEdit->save();
+        return redirect('/playlists');
+      } else {
+        return redirect('/playlists/' . $roomCode . '/edit')
+          ->withInput()
+          ->withErrors($validation);
+      }
+    }
 }

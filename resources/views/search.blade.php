@@ -121,4 +121,4 @@
       xhttp.send();
     }
   </script>
-@section('endcontent')
+@endsection

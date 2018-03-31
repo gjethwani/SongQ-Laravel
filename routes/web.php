@@ -29,4 +29,7 @@ Route::middleware(['authentication'])->group(function() {
   Route::post('/create-playlist', 'PlaylistController@addPlaylist');
   Route::get('/accept', 'RequestController@accept');
   Route::get('/decline', 'RequestController@decline');
+  Route::get('/playlists/{roomCode}/edit', 'PlaylistController@edit');
+  Route::post('/playlists/{roomCode}/edit', 'PlaylistController@executeEdit');
+  Route::get('/playlists/{roomCode}/delete', 'PlaylistController@deletePlaylist');
 });
