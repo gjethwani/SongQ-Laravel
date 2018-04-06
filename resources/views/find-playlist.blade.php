@@ -18,10 +18,11 @@
 
   <form action='/guest' method='post' id='location' style='display: none'>
     {{csrf_field()}}
-    <div class='form-group'>
+    <div class='form-group' id='locationDiv'>
       <select
         name='location'
-        class='form-control'>
+        class='form-control'
+        id='locationSelect'>
       </select>
     </div>
     <button type='submit' class='btn btn-primary'>Submit</button>
@@ -46,6 +47,44 @@
   @endif
 @endsection
   <script>
+    var latitude = "";
+    var longitude = "";
+
+    function getNearbyParties() {
+      console.log('getNearbyParties');
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+             // Typical action to be performed when the document is ready:
+             console.log(xhttp.responseText);
+          }
+      };
+      xhttp.open("GET", "/get-nearby-parties?latitude=" + latitude + "&longitude=" + longitude, true);
+      xhttp.send();
+    }
+
+    function initLocation() {
+      var determiningLocation = document.getElementById('determiningLocation');
+      if ("geolocation" in navigator) {
+        console.log('here1');
+        navigator.geolocation.getCurrentPosition(function(position) {
+          console.log(position);
+          latitude = position.coords.latitude;
+          longitude = position.coords.longitude;
+          getNearbyParties();
+        }, function() {
+          console.log('error');
+          document.getElementById('locationSelect').display = 'none';
+          document.getElementById('locationDiv').innerHTML = 'Location Unavailable';
+        }, {timeout: 5000});
+      } else {
+        console.log('here2');
+         console.log("Location unavailable");
+         document.getElementById('locationSelect').display = 'none';
+         document.getElementById('locationDiv').innerHTML = 'Location Unavailable';
+      }
+    }
+    initLocation();
     function toggleForms(id1, id2) {
       var id1 = document.getElementById(id1);
       var id2 = document.getElementById(id2);

@@ -21,6 +21,7 @@ Route::post('/guest', 'RequestController@authenticatePlaylist');
 Route::get('/search', 'RequestController@returnResults');
 Route::get('/add-request', 'RequestController@addRequest');
 Route::get('/spotify-redirect', 'SpotifyController@getCode');
+Route::get('/get-nearby-parties', 'PlaylistController@getNearbyParties');
 
 Route::middleware(['authentication'])->group(function() {
   Route::get('/playlists', 'PlaylistController@showAll');

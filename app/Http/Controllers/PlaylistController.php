@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Config;
 use GuzzleHttp\Client;
 use Validator;
 use Illuminate\Support\Facades\Auth;
+use DB;
 
 class PlaylistController extends Controller
 {
@@ -71,6 +72,8 @@ class PlaylistController extends Controller
         $name = $request->input('playlistName');
         $id = $request->input('playlistId');
         $formSelect = $request->input('formSelect');
+        $latitude = $request->input('latitude');
+        $longitude = $request->input('longitude');
         //get user id
         $client = new Client();
         /*$accessToken = Config::get('accessToken');
@@ -127,6 +130,9 @@ class PlaylistController extends Controller
           $jsonPlaylistResponse = json_decode($playlistResponse->getBody()->getContents());
           $name = $jsonPlaylistResponse->name;
           $playlistId = $id;
+        } else {
+          return response('error', 500)
+                  ->header('Content-Type', 'text/plain');
         }
         if ($passes) {
           $roomCodeCharacters = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9"];
@@ -140,6 +146,12 @@ class PlaylistController extends Controller
           $playlist->playlistId = $playlistId;
           $playlist->owner = $userId;
           $playlist->playlistName = $name;
+          if ($latitude != null) {
+            $playlist->latitude = $latitude;
+          }
+          if ($longitude != null) {
+            $playlist->longitude = $longitude;
+          }
           $playlist->save();
           return redirect('/playlists');
         }
@@ -205,5 +217,46 @@ class PlaylistController extends Controller
           ->withInput()
           ->withErrors($validation);
       }
+    }
+
+    public function googleApiCall($withinThirty, $currLongitude, $currLatitude) {
+      $url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=";
+      $url = $url . $currLatitude . ',' . $currLongitude . '&destinations=';
+      for ($i = 0; $i < sizeof($withinThirty)-1; $i++) {
+        $url = $url . $withinThirty[$i]->latitude . ',' . $withinThirty[$i]->longitude . '|';
+      }
+      $url = $url . $withinThirty[sizeof($withinThirty) - 1]->latitude . ',' . $withinThirty[sizeof($withinThirty) - 1]->longitude;
+      $url = $url . '&key=' . env('GOOGLE_API_KEY');
+
+      $client = new Client();
+      $response = $client->request('GET', $url);
+      if ($response->getStatusCode() == 200) {
+        $googleResponse = json_decode($response->getBody()->getContents());
+        return $googleResponse;
+        $valueArray = $googleResponse->rows;
+        $toReturn = [];
+        for ($i = 0; $i < sizeof($valueArray); $i++) {
+          $value = $valueArray[$i]->elements[0]->distance->value;
+          if ($value <= 50) {
+            $toReturn.push($withinThirty[$i]->roomCode);
+          }
+        }
+        return $toReturn;
+      } else {
+        return 'error';
+      }
+    }
+
+    public function getNearbyParties(Request $request) {
+      $currLongitude = $request->input('longitude');
+      $currLatitude = $request->input('latitude');
+      $withinThirty = DB::select(
+        'select roomCode, abs(longitude - '. $currLongitude .') as longitudeDifference, abs(latitude - '. $currLatitude .') as latitudeDifference, latitude, longitude
+        from playlists
+        where latitudeDifference <= 30 AND longitudeDifference <= 30'
+      );
+      $nearbyParties = $this->googleApiCall($withinThirty, $currLongitude, $currLatitude);
+      //return json_encode($nearbyParties);
+      return $nearbyParties;
     }
 }
