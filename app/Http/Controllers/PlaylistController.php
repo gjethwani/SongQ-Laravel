@@ -232,16 +232,29 @@ class PlaylistController extends Controller
       $response = $client->request('GET', $url);
       if ($response->getStatusCode() == 200) {
         $googleResponse = json_decode($response->getBody()->getContents());
-        return $googleResponse;
         $valueArray = $googleResponse->rows;
-        $toReturn = [];
+        //return $valueArray;
+        /*$toReturn = '{"data":';
+        $jsonArray = '[';
         for ($i = 0; $i < sizeof($valueArray); $i++) {
           $value = $valueArray[$i]->elements[0]->distance->value;
-          if ($value <= 50) {
-            $toReturn.push($withinThirty[$i]->roomCode);
+          if ($value <= 200) {
+            $jsonArray = $jsonArray . '{"roomCode": "' . $withinThirty[$i]->roomCode . '","playlistName":"' . $withinThirty[$i]->playlistName . '"},';
+          //  $toReturn->push($withinThirty[$i]->roomCode);
           }
         }
-        return $toReturn;
+        $jsonArray = substr($jsonArray, 0, -1);
+        $toReturn = $toReturn . $jsonArray . ']' . '}';
+        return json_encode(array($toReturn));*/
+        $toReturn = array();
+        for ($i = 0; $i < sizeof($valueArray); $i++) {
+          $value = $valueArray[$i]->elements[0]->distance->value;
+          if ($value <= 200) {
+            array_push($toReturn, array('roomCode' => $withinThirty[$i]->roomCode, 'playlistName' => $withinThirty[$i]->playlistName));
+          //  $toReturn->push($withinThirty[$i]->roomCode);
+          }
+        }
+        return json_encode($toReturn);
       } else {
         return 'error';
       }
@@ -251,12 +264,12 @@ class PlaylistController extends Controller
       $currLongitude = $request->input('longitude');
       $currLatitude = $request->input('latitude');
       $withinThirty = DB::select(
-        'select roomCode, abs(longitude - '. $currLongitude .') as longitudeDifference, abs(latitude - '. $currLatitude .') as latitudeDifference, latitude, longitude
+        'select roomCode, abs(longitude - '. $currLongitude .') as longitudeDifference, abs(latitude - '. $currLatitude .') as latitudeDifference, latitude, longitude, playlistName
         from playlists
         where latitudeDifference <= 30 AND longitudeDifference <= 30'
       );
       $nearbyParties = $this->googleApiCall($withinThirty, $currLongitude, $currLatitude);
-      //return json_encode($nearbyParties);
       return $nearbyParties;
+      //return json_encode($nearbyParties);
     }
 }

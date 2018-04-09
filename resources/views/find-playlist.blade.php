@@ -51,12 +51,19 @@
     var longitude = "";
 
     function getNearbyParties() {
-      console.log('getNearbyParties');
+      console.log(latitude + " " + longitude);
       var xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function() {
           if (this.readyState == 4 && this.status == 200) {
              // Typical action to be performed when the document is ready:
-             console.log(xhttp.responseText);
+             var response = JSON.parse(xhttp.responseText);
+             console.log(response);
+             for (var i = 0; i < response.length; i++) {
+               var optionTag = document.createElement('option');
+               optionTag.value = response[i].roomCode;
+               optionTag.innerHTML = response[i].playlistName;
+               document.getElementById('locationSelect').appendChild(optionTag);
+             }
           }
       };
       xhttp.open("GET", "/get-nearby-parties?latitude=" + latitude + "&longitude=" + longitude, true);
