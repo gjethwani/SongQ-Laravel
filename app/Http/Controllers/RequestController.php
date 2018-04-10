@@ -42,9 +42,9 @@ class RequestController extends Controller
     public function authenticatePlaylist(Request $request) {
       $code = $request->input('code');
       $location = $request->input('location');
-      if ($code != NULL) {
+      $formSelect = $request->input('formSelect');
+      if ($formSelect == 'enterCode') {
         $codeExists = Playlist::where('roomCode',$code)->get();
-
         if (sizeof($codeExists) > 0) {
           return view('search', [
             'roomCode' => $codeExists[0]->roomCode,
@@ -55,6 +55,12 @@ class RequestController extends Controller
              'exists' => false
           ]);
         }
+      } else if ($formSelect == 'findByLocation') {
+        $playlists = Playlist::where('roomCode',$location)->get();
+        return view('search', [
+          'roomCode' => $code,
+          'owner' => $playlists[0]->owner
+        ]);
       }
     }
 

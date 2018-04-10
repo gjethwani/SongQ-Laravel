@@ -2,31 +2,29 @@
 @section('title', 'Find a playlist')
 @section('content')
   <h1>Find a Playlist</h1>
-  <input type='radio' name='formSelect' onclick='return toggleForms("code","location");' checked> Enter code <br>
-  <input type='radio' name='formSelect' onclick='return toggleForms("location","code");'> Find by Location <br>
-  <form action='/guest' method='post' id='code'>
+  <form action='/guest' method='post'>
+    <input type='radio' value='enterCode' id='enterCode' name='formSelect' onclick='return toggleForms("code","location");' checked> Enter code <br>
+    <input type='radio' value='findByLocation' id='findByLocation' name='formSelect' onclick='return toggleForms("location","code");'> Find by Location <br>
     {{csrf_field()}}
-    <div class='form-group'>
+    <div class='form-group'  id='code'>
       <input
         type='text'
         placeholder='Code'
         name='code'
         class='form-control'>
     </div>
-    <button type='submit' class='btn btn-primary'>Submit</button>
-  </form>
 
-  <form action='/guest' method='post' id='location' style='display: none'>
-    {{csrf_field()}}
-    <div class='form-group' id='locationDiv'>
-      <select
-        name='location'
-        class='form-control'
-        id='locationSelect'>
-      </select>
+    <div id='location' style='display: none'>
+      <div class='form-group' id='locationDiv'>
+        <select
+          name='location'
+          class='form-control'
+          id='locationSelect'>
+        </select>
+      </div>
     </div>
     <button type='submit' class='btn btn-primary'>Submit</button>
-  </form>
+</form>
 
   @if ($exists == false)
     <div class="alert alert-danger">
@@ -58,6 +56,9 @@
              // Typical action to be performed when the document is ready:
              var response = JSON.parse(xhttp.responseText);
              console.log(response);
+             if (response.length == 0) {
+               document.getElementById('locationDiv').innerHTML = 'No parties nearby';
+             }
              for (var i = 0; i < response.length; i++) {
                var optionTag = document.createElement('option');
                optionTag.value = response[i].roomCode;
@@ -93,14 +94,16 @@
     }
     initLocation();
     function toggleForms(id1, id2) {
-      var id1 = document.getElementById(id1);
-      var id2 = document.getElementById(id2);
-      if (id1.style.display == 'none') {
-        id1.style.display = 'block';
-        id2.style.display = 'none';
-      } else {
-        id1.style.display = 'none';
-        id2.style.display = 'block';
+      var enterCode = document.getElementById('enterCode');
+      var findByLocation = document.getElementById('findByLocation');
+      var codeForm = document.getElementById('code');
+      var locationForm = document.getElementById('location');
+      if (enterCode.checked == true) {
+        codeForm.style.display = 'block';
+        locationForm.style.display = 'none';
+      } else if (findByLocation.checked == true) {
+        codeForm.style.display = 'none';
+        locationForm.style.display = 'block';
       }
     }
   </script>

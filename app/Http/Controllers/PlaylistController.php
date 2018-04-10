@@ -232,7 +232,9 @@ class PlaylistController extends Controller
       $response = $client->request('GET', $url);
       if ($response->getStatusCode() == 200) {
         $googleResponse = json_decode($response->getBody()->getContents());
-        $valueArray = $googleResponse->rows;
+        $valueArray = $googleResponse->rows[0]->elements;
+
+        //$valueArray = $rowsArray->elements;
         //return $valueArray;
         /*$toReturn = '{"data":';
         $jsonArray = '[';
@@ -248,7 +250,7 @@ class PlaylistController extends Controller
         return json_encode(array($toReturn));*/
         $toReturn = array();
         for ($i = 0; $i < sizeof($valueArray); $i++) {
-          $value = $valueArray[$i]->elements[0]->distance->value;
+          $value = $valueArray[$i]->distance->value;
           if ($value <= 200) {
             array_push($toReturn, array('roomCode' => $withinThirty[$i]->roomCode, 'playlistName' => $withinThirty[$i]->playlistName));
           //  $toReturn->push($withinThirty[$i]->roomCode);
