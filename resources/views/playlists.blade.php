@@ -29,7 +29,7 @@
           document.getElementById(roomCode).style.display = 'none';
         }
       };
-      xhttp.open('GET', '/playlists/' + roomCode + '/delete', true);
+      xhttp.open('GET', '/playlists/' + roomCode + '/delete', false);
       xhttp.send();
     }
   </script>

@@ -82,7 +82,7 @@
                        document.getElementById(ids[index]).style.display = 'none';
                        document.getElementById('requested' + ids[index]).style.display = 'block';
                      } else if (addRequest.responseText === 'failure') {
-                       consloe.log('error');
+                       console.log('error');
                      }
                   }
                };

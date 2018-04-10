@@ -1,5 +1,4 @@
 <?php
-//// TODO: replace all API calls and implement middleware and auth
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -15,23 +14,18 @@ use Illuminate\Support\Facades\Auth;
 class RequestController extends Controller
 {
     public function findPlaylist() {
+      /* Spotify Authentication */
       $client = new Client();
       $formParams = [
         'grant_type' => 'client_credentials',
         'client_id' => '57a94d67afaa4a55802fdb9c6ca3d28f',
         'client_secret' => '47c18e0c81f242acbf372d6ddfc263df',
       ];
-      /*$response = $client->request('POST', 'https://accounts.spotify.com/api/token', [
-        'form_params' => [
-          'grant_type' => 'client_credentials',
-          'client_id' => '57a94d67afaa4a55802fdb9c6ca3d28f',
-          'client_secret' => '47c18e0c81f242acbf372d6ddfc263df',
-        ]
-      ]);
-      $responseJson = json_decode($response->getBody()->getContents()); */
       $responseJson = postRequest('https://accounts.spotify.com/api/token', $formParams);
       $clientCredentialsToken = $responseJson->access_token;
       File::put(base_path() . '/config/clientCredentialsToken.php', "<?php\n return '$clientCredentialsToken' ;");
+
+      /* Get nearby parties */
       return view('find-playlist', [
         'exists' => true
       ]);
@@ -48,9 +42,9 @@ class RequestController extends Controller
     public function authenticatePlaylist(Request $request) {
       $code = $request->input('code');
       $location = $request->input('location');
-      if ($code != NULL) {
+      $formSelect = $request->input('formSelect');
+      if ($formSelect == 'enterCode') {
         $codeExists = Playlist::where('roomCode',$code)->get();
-
         if (sizeof($codeExists) > 0) {
           return view('search', [
             'roomCode' => $codeExists[0]->roomCode,
@@ -61,6 +55,12 @@ class RequestController extends Controller
              'exists' => false
           ]);
         }
+      } else if ($formSelect == 'findByLocation') {
+        $playlists = Playlist::where('roomCode',$location)->get();
+        return view('search', [
+          'roomCode' => $code,
+          'owner' => $playlists[0]->owner
+        ]);
       }
     }
 
