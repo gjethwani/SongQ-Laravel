@@ -14,7 +14,7 @@
 Route::get('/', function () {
     return view('index');
 });
-
+//https://accounts.spotify.com/en/status
 Route::get('/host', 'SpotifyController@userAuth');
 Route::get('/guest', 'RequestController@findPlaylist');
 Route::post('/guest', 'RequestController@authenticatePlaylist');

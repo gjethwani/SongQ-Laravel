@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class RequestController extends Controller
 {
-    public function findPlaylist() {
+    public function findPlaylist(Request $request) {
       /* Spotify Authentication */
       $client = new Client();
       $formParams = [
@@ -23,8 +23,8 @@ class RequestController extends Controller
       ];
       $responseJson = postRequest('https://accounts.spotify.com/api/token', $formParams);
       $clientCredentialsToken = $responseJson->access_token;
-      File::put(base_path() . '/config/clientCredentialsToken.php', "<?php\n return '$clientCredentialsToken' ;");
-
+  //    File::put(base_path() . '/config/clientCredentialsToken.php', "<?php\n return '$clientCredentialsToken' ;");
+      $request->session()->put('clientCredentialsToken', $clientCredentialsToken);
       /* Get nearby parties */
       return view('find-playlist', [
         'exists' => true
@@ -33,7 +33,8 @@ class RequestController extends Controller
 
     public function returnResults(Request $request) {
       $query = $request->input('query');
-      $accessToken = Config::get('clientCredentialsToken');
+    //  $accessToken = Config::get('clientCredentialsToken');
+      $accessToken = $request->session()->get('clientCredentialsToken');
       $endpoint = 'https://api.spotify.com/v1/search?q=' . $query . '&type=track';
       $jsonResponse = getRequest($endpoint, $accessToken);
       return json_encode($jsonResponse);
