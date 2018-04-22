@@ -33,6 +33,9 @@ class RequestController extends Controller
 
     public function returnResults(Request $request) {
       $query = $request->input('query');
+      if ($query == null) {
+        dd('No query');
+      }
     //  $accessToken = Config::get('clientCredentialsToken');
       $accessToken = $request->session()->get('clientCredentialsToken');
       $endpoint = 'https://api.spotify.com/v1/search?q=' . $query . '&type=track';
@@ -47,17 +50,24 @@ class RequestController extends Controller
       if ($formSelect == 'enterCode') {
         $codeExists = Playlist::where('roomCode',$code)->get();
         if (sizeof($codeExists) > 0) {
+          $request->session()->put('playlistAuthenticated', true);
+        //  $request->session()->put('roomCode', $codeExists[0]->roomCode);
+        //  $request->session()->put('owner', $codeExists[0]->owner);
           return view('search', [
             'roomCode' => $codeExists[0]->roomCode,
             'owner' => $codeExists[0]->owner
           ]);
         } else {
+          $request->session()->put('playlistAuthenticated', false);
           return view('find-playlist', [
              'exists' => false
           ]);
         }
       } else if ($formSelect == 'findByLocation') {
         $playlists = Playlist::where('roomCode',$location)->get();
+        $request->session()->put('playlistAuthenticated', true);
+      //  $request->session()->put('roomCode', $code);
+      //  $request->session()->put('owner', $playlists[0]->owner);
         return view('search', [
           'roomCode' => $code,
           'owner' => $playlists[0]->owner
@@ -67,7 +77,13 @@ class RequestController extends Controller
 
     public function addRequest(Request $request) {
       $roomCode = $request->input('roomCode');
+  /*    if ($roomCode == null) {
+        $roomCode = $request->session()->get('roomCode');
+      }*/
       $owner = $request->input('owner');
+  /*    if ($owner == null) {
+        $owner = $request->session()->get('owner');
+      }*/
       $songId = $request->input('songId');
       $songName = $request->input('songName');
       $artists = $request->input('artists');

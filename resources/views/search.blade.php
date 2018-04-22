@@ -15,6 +15,9 @@
   </table>
   <script>
     function searchForTrack(query) {
+      if (query == null || query == '') {
+        return;
+      }
       var ids = [];
       var names = [];
       var albums = [];
