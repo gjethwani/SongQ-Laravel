@@ -86,6 +86,7 @@ class PlaylistController extends Controller
         $playlistId = '';
         $passes = false;
         if ($formSelect == 'create') {
+        //  dd('here1');
           $validation = Validator::make([
             'playlistName' => $request->input('playlistName')
           ], [
@@ -110,9 +111,10 @@ class PlaylistController extends Controller
             $playlistId = $jsonPlaylistResponse->id;
             $passes = true;
           } else {
-            return redirect()->action('PlaylistController@create')
+            /*return redirect('/create-playlist')
               ->withInput()
-              ->withErrors($validation);
+              ->withErrors($validation);*/
+            return json_encode($validation->errors());
           }
         } else if ($formSelect == 'existing') {
           $passes = true;
@@ -153,7 +155,7 @@ class PlaylistController extends Controller
             $playlist->longitude = $longitude;
           }
           $playlist->save();
-          return redirect('/playlists');
+          return 'success';
         }
     }
 

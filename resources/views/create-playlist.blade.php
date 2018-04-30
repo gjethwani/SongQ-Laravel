@@ -3,13 +3,8 @@
 @section('content')
   <h1>Create a Playlist</h1>
 
-  @if ($errors->isNotEmpty())
-      <div class="alert alert-danger" role="alert">
-        @foreach($errors->all() as $message)
-          {{$message}}
-        @endforeach
-      </div>
-  @endif
+  <div class="alert alert-danger" id = 'errors' role="alert" style='display:none'>
+  </div>
 
   <form id='overallForm'>
     {{csrf_field()}}
@@ -98,8 +93,18 @@
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
            // Typical action to be performed when the document is ready:
+           var response = xhttp.responseText;
            var url = window.location.origin;
-           window.location.href = url + '/playlists/';
+           if (response === 'success') {
+              document.getElementById('errors').style.display = 'none';
+              window.location.href = url + '/playlists/';
+           } else {
+              var responseJSON = JSON.parse(response);
+              document.getElementById('errors').style.display = 'block';
+              var pError = document.createElement('p');
+              pError.innerHTML = responseJSON.playlistName[0];
+              document.getElementById('errors').appendChild(pError);
+           }
         }
     };
     console.log(params);
