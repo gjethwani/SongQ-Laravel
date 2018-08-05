@@ -64,9 +64,7 @@ class PlaylistController extends Controller
             array_push($playlistData, [$playlistArray[$i]->id, $playlistArray[$i]->name]);
         }
       }
-      return view('create-playlist', [
-        'playlistData' => $playlistData,
-      ]);
+      return json_encode($playlistData);
     }
 
     public function addPlaylist(Request $request) {
@@ -166,7 +164,7 @@ class PlaylistController extends Controller
           ->get();
         $userId = Auth::id();
         $playlistId = Playlist::find($roomCode)->playlistId;
-        return view('requests', [
+        return json_encode([
           'requests' => $requests,
           'userId' => $userId,
           'playlistId' => $playlistId
