@@ -24,9 +24,10 @@ class PlaylistController extends Controller
       $userId = $jsonResponse->id;*/
       $userId = Auth::id();
       $playlists = Playlist::where('owner',$userId)->get();
-      return view('playlists', [
-        'playlists' => $playlists
-       ]);
+      // return view('playlists', [
+      //   'playlists' => $playlists
+      //  ]);
+      return json_encode($playlists);
     }
 
     public function create() {

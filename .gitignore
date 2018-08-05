@@ -11,3 +11,6 @@ Homestead.yaml
 npm-debug.log
 yarn-error.log
 .env
+.DS_Store
+composer.phar
+storage/.DS_Store
